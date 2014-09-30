@@ -40,6 +40,7 @@
 #include <poll.h>
 #include <netinet/tcp.h>
 #include <signal.h>
+#include <time.h>
 
 /* Package includes */
 #include "sim-config.h"
@@ -86,6 +87,7 @@ enum target_signal {
   TARGET_SIGNAL_BUS  = 10,
   TARGET_SIGNAL_SEGV = 11,
   TARGET_SIGNAL_ALRM = 14,
+  TARGET_SIGNAL_XCPU = 24,
   TARGET_SIGNAL_USR2 = 31,
   TARGET_SIGNAL_PWR  = 32
 };
@@ -294,7 +296,8 @@ rsp_exception (unsigned long int  except)
     case EXCEPT_SYSCALL:  sigval = TARGET_SIGNAL_USR2; break;
     case EXCEPT_FPE:      sigval = TARGET_SIGNAL_FPE;  break;
     case EXCEPT_TRAP:     sigval = TARGET_SIGNAL_TRAP; break;
-
+    case EXCEPT_TIMEOUT:  sigval = TARGET_SIGNAL_XCPU; break;
+  
     default:
       fprintf (stderr, "Warning: Unknown RSP exception %lu: Ignored\n", except);
       return;
@@ -1372,7 +1375,8 @@ static void
 rsp_continue_with_signal (struct rsp_buf *buf)
 {
   printf ("RSP continue with signal '%s' received\n", buf->data);
-
+  
+  rsp_continue(buf);
 }	/* rsp_continue_with_signal () */
 
 
@@ -1938,7 +1942,33 @@ rsp_command (struct rsp_buf *buf)
       mtspr (regno, val);
       put_str_packet ("OK");
     }
-      
+    else if (0 == strncmp ("timeout ", cmd, strlen("timeout ")))
+      {
+        int timeout;
+        
+        if ( 1 != sscanf (cmd, "timeout %d", &timeout))
+          {
+            fprintf (stderr, "Warning: qRcmd %s not recognized: ignored\n",
+                     cmd);
+            put_str_packet ("E01");
+            return;
+          }
+        else if (timeout < 0)
+          {
+            fprintf (stderr, "Warning: invalid timeout %d ignore\n", timeout);
+            put_str_packet ("E01");
+            return;
+          }
+        runtime.debug.timeout_start = clock();
+        runtime.debug.timeout = (clock_t)timeout * CLOCKS_PER_SEC;
+
+        /* reply "OK" */
+        put_str_packet ("OK");
+      }
+    else
+      {
+        fprintf (stderr, cmd);
+      } 
 }	/* rsp_command () */
 
 

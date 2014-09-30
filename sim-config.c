@@ -423,6 +423,8 @@ init_defconfig ()
   runtime.debug.instr           = JI_UNDEFINED;
   runtime.debug.mod_id          = JM_UNDEFINED;
   runtime.debug.write_defined_p = 0;		/* No WRITE_COMMAND yet */
+  runtime.debug.timeout         = 0;  /* default no timeout */
+  runtime.debug.timeout_start   = 0;
 
   /* NPC state. Set to 1 when NPC is changed while the processor is stalled. */
   cpu_state.npc_not_valid = 0;

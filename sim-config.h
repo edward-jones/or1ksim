@@ -29,6 +29,7 @@
 
 /* System includes */
 #include <stdio.h>
+#include <time.h>
 
 /* Package includes */
 #include "arch.h"
@@ -217,6 +218,9 @@ struct runtime
     unsigned char  acc_type;	/* Access type for GO */
     unsigned long int  addr;	/* Address to read/write for GO */
     unsigned long int  size;	/* Num bytes to read/write (up to 2^16) */
+    
+    clock_t timeout;  /* clocks for timeout after timeout_start */
+    clock_t timeout_start;
   } debug;
 
   struct

@@ -848,6 +848,10 @@ cpu_reset ()
   runtime.cpu.supercycles  = 0;
   runtime.cpu.hazardwait   = 0;
 
+  /* reset timeout */
+  runtime.debug.timeout = 0;
+  runtime.debug.timeout_start = 0;
+
   for (i = 0; i < MAX_GPRS; i++)
     {
       setsim_reg (i, 0);
@@ -1030,6 +1034,28 @@ exec_main ()
 	{
 	  vapi_check ();
 	}
+
+      if (config.debug.enabled)
+	{
+          clock_t timeout = runtime.debug.timeout;
+          if ((timeout != 0) &&
+              (clock() - runtime.debug.timeout_start) > timeout)
+            {
+              fprintf (stderr, "Timeout\n");
+              
+              /* reset the timeout values */
+              runtime.debug.timeout = 0;
+              runtime.debug.timeout_start = 0;
+              
+              set_stall_state (1);
+
+              /* send a timeout exception */
+              if (config.debug.rsp_enabled)
+                {
+                  rsp_exception(EXCEPT_TIMEOUT);
+                }
+            }
+        }
 
       if (config.debug.enabled)
 	{

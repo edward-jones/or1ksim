@@ -47,6 +47,7 @@
 #define EXCEPT_SYSCALL	0x0c00
 #define EXCEPT_FPE	0x0d00
 #define EXCEPT_TRAP	0x0e00
+#define EXCEPT_TIMEOUT 0x0f00
 
 /* Function prototypes for external use */
 extern void except_handle (oraddr_t except, oraddr_t ea);
